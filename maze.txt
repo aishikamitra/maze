@@ -1,0 +1,120 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define WIDTH 11
+#define HEIGHT 11
+
+int maze[HEIGHT][WIDTH];
+int visited[HEIGHT][WIDTH];
+
+// Directions for moving in the maze
+int dir[4][2] = {
+    {0, 2},   // Down
+    {2, 0},   // Right
+    {0, -2},  // Up
+    {-2, 0}   // Left
+};
+
+// Function to check if a cell is within the maze bounds
+int is_valid(int x, int y) {
+    return (x > 0 && x < HEIGHT && y > 0 && y < WIDTH);
+}
+
+// Function to generate the maze using DFS
+void generate_maze(int x, int y) {
+    visited[x][y] = 1;
+    maze[x][y] = 0;
+    for (int i = 0; i < 4; i++) {
+        int r = rand() % 4;
+        int temp_x = dir[i][0];
+        int temp_y = dir[i][1];
+        dir[i][0] = dir[r][0];
+        dir[i][1] = dir[r][1];
+        dir[r][0] = temp_x;
+        dir[r][1] = temp_y;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        int nx = x + dir[i][0];
+        int ny = y + dir[i][1];
+        if (is_valid(nx, ny) && !visited[nx][ny]) {
+            maze[x + dir[i][0] / 2][y + dir[i][1] / 2] = 0;
+            generate_maze(nx, ny);
+        }
+    }
+}
+
+// Function to print the maze
+void print_maze(int player_x, int player_y) {
+    system("clear"); // Use "cls" on Windows
+    for (int i = 0; i < HEIGHT; i++) {
+        for (int j = 0; j < WIDTH; j++) {
+            if (i == player_x && j == player_y) {
+                printf("P "); // Player position
+            } else if (i == HEIGHT - 2 && j == WIDTH - 2) {
+                printf("X "); // End position
+            } else {
+                printf(maze[i][j] ? "# " : "  ");
+            }
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    srand(time(NULL));
+
+    // Initialize the maze with walls
+    for (int i = 0; i < HEIGHT; i++) {
+        for (int j = 0; j < WIDTH; j++) {
+            maze[i][j] = 1; // Set all cells to walls
+            visited[i][j] = 0; // Mark all cells as unvisited
+        }
+    }
+    generate_maze(1, 1);
+
+    int player_x = 1, player_y = 1;
+    char move;
+
+    while (1) {
+        print_maze(player_x, player_y);
+        printf("Move (WASD): ");
+        scanf(" %c", &move);
+
+        int new_x = player_x, new_y = player_y;
+
+        switch (move) {
+            case 'w': // Move up
+                new_x -= 1;
+                break;
+            case 's': // Move down
+                new_x += 1;
+                break;
+            case 'a': // Move left
+                new_y -= 1;
+                break;
+            case 'd': // Move right
+                new_y += 1;
+                break;
+            default:
+                printf("Invalid move! Use W, A, S, or D.\n");
+                continue;
+        }
+
+        // Check if the new position is valid
+        if (is_valid(new_x, new_y) && maze[new_x][new_y] == 0) {
+            player_x = new_x;
+            player_y = new_y;
+        }
+
+        // Check for reaching the end position (X) immediately
+        if (player_x == HEIGHT - 2 && player_y == WIDTH - 2) {
+            print_maze(player_x, player_y);
+            printf("\n🎉 Congratulations! You've reached the end of the maze! 🎉\n");
+            break;
+        }
+    }
+
+    return 0;
+}
